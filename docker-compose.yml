@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  postgresdb:
+    image: postgres:13.1-alpine
+    container_name: postgresdb
+    environment:
+      POSTGRES_DB: mvcendtoend
+      POSTGRES_USER: ashokit
+      POSTGRES_PASSWORD: ashokit
+      POSTGRES_SCHEMA: mvcendtoend
+    ports:
+      - "5431:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ashokit"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: mvcendtoend-app
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgresdb:5432/mvcendtoend?schema=mvcendtoend
+      SPRING_DATASOURCE_USERNAME: ashokit
+      SPRING_DATASOURCE_PASSWORD: ashokit
+      SERVER_PORT: 9091
+    ports:
+      - "9091:9091"
+
+volumes:
+  postgres_data:

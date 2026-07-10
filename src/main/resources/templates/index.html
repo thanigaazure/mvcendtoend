@@ -1,0 +1,260 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-container {
+            padding: 2rem 0;
+        }
+        .card {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: none;
+            border-radius: 15px;
+        }
+        .card-header {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1.5rem;
+        }
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.4);
+        }
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .table thead th {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 1rem;
+            font-weight: 600;
+        }
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+        .badge {
+            font-size: 0.9em;
+            padding: 0.5em 1em;
+        }
+        .icon-large {
+            font-size: 2rem;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid main-container">
+        <div class="row">
+            <!-- Navigation Header -->
+            <div class="col-12 mb-4">
+                <nav class="navbar navbar-expand-lg navbar-dark bg-dark rounded">
+                    <div class="container">
+                        <a class="navbar-brand" href="#">
+                            <i class="bi bi-people-fill icon-large"></i>
+                            User Management System
+                        </a>
+                        <div class="navbar-nav ms-auto">
+                            <span class="navbar-text">
+                                <i class="bi bi-clock"></i> 
+                                <span id="currentTime"></span>
+                            </span>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+            
+            <!-- Add User Form -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h3 class="mb-0">
+                            <i th:class="${action == 'update'} ? 'bi bi-person-plus' : 'bi bi-pencil-square'"></i>
+                            <span th:text="${action == 'update'} ? 'Update User' : 'Add New User'">Add New User</span>
+                        </h3>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="@{/saveUser}" th:object="${user}" method="post">
+                            <!-- Hidden field for userID -->
+                            <input type="hidden" th:field="*{userID}" name="userID">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="fullName" class="form-label">
+                                        <i class="bi bi-person text-primary"></i> Full Name
+                                    </label>
+                                    <input type="text" class="form-control" id="fullName" th:field="*{name}" name="name">
+                                    <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}" style="color:red"></div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="emailAddress" class="form-label">
+                                        <i class="bi bi-envelope text-primary"></i> Email
+                                    </label>
+                                    <input type="email" class="form-control" id="emailAddress" th:field="*{email}" name="email">
+                                </div>
+                                
+                                <div class="col-12 mb-4">
+                                    <label for="phoneNumber" class="form-label">
+                                        <i class="bi bi-telephone text-primary"></i> Phone Number
+                                    </label>
+                                    <input type="tel" class="form-control" id="phoneNumber" th:field="*{phone}" name="phone">
+                                </div>
+                                
+                                <div class="col-12 text-center">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i th:class="${action == 'update'} ? 'bi bi-check-circle' : 'bi bi-arrow-clockwise'"></i>
+                                        <span th:text="${action == 'update'} ? 'Update User' : 'Create User'"></span>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Users Table -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h3 class="mb-0">
+                            <i class="bi bi-table"></i>
+                            Users Directory
+                        </h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-container">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">
+                                                <i class="bi bi-hash"></i> ID
+                                            </th>
+                                            <th scope="col">
+                                                <i class="bi bi-person"></i> Name
+                                            </th>
+                                            <th scope="col">
+                                                <i class="bi bi-envelope"></i> Email
+                                            </th>
+                                            <th scope="col">
+                                                <i class="bi bi-telephone"></i> Phone
+                                            </th>
+                                            <th scope="col">
+                                                <i class="bi bi-gear"></i> Actions
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Thymeleaf users list - replace with actual data -->
+                                        <tr th:each="user : ${users}">
+                                            <td>
+                                                <span class="badge bg-primary" th:text="${user.userID}">001</span>
+                                            </td>
+                                            <td th:text="${user.name}"></td>
+                                            <td th:text="${user.email}"></td>
+                                            <td th:text="${user.phone}"></td>
+                                            <td>
+                                                <a th:href="@{/editUser/{id}(id=${user.userID})}" 
+                                                   class="btn btn-sm btn-outline-primary" 
+                                                   title="Edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a th:href="@{/deleteUser/{id}(id=${user.userID})}" 
+                                                   class="btn btn-sm btn-outline-primary" 
+                                                   title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            Total Users: <span th:text="${users != null ? users.size() : 3}">3</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('currentTime').textContent = timeString;
+        }
+        
+        // Update time every second
+        setInterval(updateTime, 1000);
+        updateTime(); // Initial call
+        
+        // Form validation feedback
+        (function() {
+            'use strict';
+            window.addEventListener('load', function() {
+                var forms = document.getElementsByClassName('needs-validation');
+                var validation = Array.prototype.filter.call(forms, function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+        
+        // Add hover effect for table rows
+        document.addEventListener('DOMContentLoaded', function() {
+            const tableRows = document.querySelectorAll('tbody tr');
+            tableRows.forEach(row => {
+                row.addEventListener('mouseenter', function() {
+                    this.style.backgroundColor = '#e3f2fd';
+                });
+                row.addEventListener('mouseleave', function() {
+                    this.style.backgroundColor = '';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
